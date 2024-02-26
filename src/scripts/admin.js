@@ -14,6 +14,25 @@ const replacer = (match, p1, p2, p3) => { // replace with the 3rd matching group
   return p3;
 }
 
+const labelScore = (score) => {
+  if (score < 30) {
+    return "Postgraduate";
+  } else if (score < 50) {
+    return "Undergraduate";
+  } else if (score < 60) {
+    return "Year 9-11 (ages 13-16)";
+  } else if (score < 70) {
+    return "Year 7-8 (ages 11-13)";
+  } else if (score < 80) {
+    return "Year 6 (ages 10-11)";
+  } else if (score < 90) {
+    return "Year 5 (ages 9-10)";
+  } else {
+    return "Year 4 (ages 8-9)";
+  }
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
   wp.domReady(() => {
     if (!document.querySelector("#readability-score")) {
@@ -32,6 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
       let readabilityScoreSpan = document.querySelector("#readability-score");
 
       readabilityScoreSpan.textContent = Math.round(analysis.score);
+
+      let readabilityGradeSpan = document.querySelector("#readability-grade");
+
+      readabilityGradeSpan.textContent = labelScore(analysis.score);
     });
   });
 });
