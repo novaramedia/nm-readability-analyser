@@ -98,15 +98,20 @@ class Init {
   <div class="nm_readability-plugin__content">
     <div class="nm_readability-plugin__content__text">
       <p>
-        This is an analysis of the ease of reading on the entirity of the post content. This uses the <a href="https://en.wikipedia.org/wiki/Flesch%E2%80%93Kincaid_readability_tests" target="_blank">Flesch-Kincaid readability tests</a> to determine the readability score and grade. The score is based on the average number of syllables per word and the average number of words per sentence. 0 is very difficult to read and 100 is very easy to read.
+        This is an analysis of the ease of reading on the entirity of the post content. This uses several formulas: <a href="https://en.wikipedia.org/wiki/Dale–Chall_readability_formula">Dale–Chall</a>, <a href="https://en.wikipedia.org/wiki/Automated_readability_index">Automated Readability</a>, <a href="https://en.wikipedia.org/wiki/Coleman–Liau_index">Coleman–Liau</a>, <a href="https://en.wikipedia.org/wiki/Flesch–Kincaid_readability_tests#Flesch_reading_ease">Flesch</a>, <a href="https://en.wikipedia.org/wiki/Gunning_fog_index">Gunning fog</a> and <a href="https://en.wikipedia.org/wiki/SMOG">SMOG</a>. The results are averaged to an estimated reading age.
       </p>
       <p>
         <em>This score updates on post save or update, not live with the editor.</em>
       </p>
     </div>
     <div class="nm_readability-plugin__content__body">
-      <p style="font-size: 1.5rem; line-height: 1">Readability score: <span id="readability-score"></span></p>
-      <p style="font-size: 1.5rem; line-height: 1">Readability grade: <span id="readability-grade"></span></p>
+      <p style="font-size: 1.5rem; line-height: 1">Estimated reading age: <span id="nm_readability-age"></span></p>
+        Dale-Chall Difficult Word Count: <span id="nm_readability-dale-chall-difficult-word-count"></span><br/>
+        Polysyllabic Word Count: <span id="nm_readability-polysyllabic-word-count"></span><br/>
+        Percentage of All Words Polysyllabic: <span id="nm_readability-polysyllabic-word-percentage"></span>%<br/>
+        Word Count: <span id="nm_readability-word-count"></span><br/>
+        Sentence Count: <span id="nm_readability-sentence-count"></span>
+      </p>
     </div>
   </div>
 </div>
