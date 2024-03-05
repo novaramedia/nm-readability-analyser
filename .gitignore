@@ -47,7 +47,7 @@ cache
 bower_components
 node_modules
 _test-src
-dist
+# dist
 
 # Logs
 logs

@@ -35,7 +35,7 @@ final class Init {
 		'MIN_MYSQL_VERSION'            => '',
 		'PLUGIN_PREFIX'                => 'NMReadabilityAnalyser',
 		'PLUGIN_NAME'                  => 'nm-readability-analyser',
-		'PLUGIN_VERSION'               => '0.0.1',
+		'PLUGIN_VERSION'               => '1.0.0',
 	);
 
 
