@@ -1,36 +1,16 @@
 {
-    "name": "wordpress-plugin-boilerplate",
+    "name": "nm-readability-analyser",
     "version": "1.0.0",
     "license": "GPL-3.0",
     "keywords": [
-        "wppb",
         "wordpress",
-        "wordpress plugin",
-        "wordpress plugin boilerplate"
+        "wordpress plugin"
     ],
-    "description": "WordPress plugin boilerplate",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/code-soup/wordpress-plugin-boilerplate.git"
-    },
-    "bugs": {
-        "url": "https://github.com/code-soup/wordpress-plugin-boilerplate/issues"
-    },
+    "description": "Wordpress plugin that analyses the content of posts and assigns an estimated minimum reading age for that content",
     "engines": {
         "node": "^18.16.0"
     },
-    "authors": [
-        {
-            "homepage": "https://www.bobz.co",
-            "name": "Vlado Bosnjak",
-            "email": "vb@bobz.co"
-        },
-        {
-            "homepage": "https://www.codesoup.co",
-            "name": "Code Soup",
-            "email": "hi@codesoup.co"
-        }
-    ],
+    "author": "Novara Media",
     "browserslist": [
         "> 1%",
         "last 3 versions",
