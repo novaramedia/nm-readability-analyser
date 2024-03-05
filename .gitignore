@@ -43,7 +43,7 @@ dwsync.xml
 intermediate
 .idea
 cache
-vendor
+# vendor
 bower_components
 node_modules
 _test-src
