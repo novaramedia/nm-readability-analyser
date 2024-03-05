@@ -15,79 +15,79 @@ defined( 'WPINC' ) || die;
 class Init {
 
 
-    use \NMReadabilityAnalyser\Traits\HelpersTrait;
+	use \NMReadabilityAnalyser\Traits\HelpersTrait;
 
 
-    // Main plugin instance
-    protected static $instance = null;
+	// Main plugin instance
+	protected static $instance = null;
 
 
-    // Assets loader class.
-    protected $assets;
+	// Assets loader class.
+	protected $assets;
 
 
-    /**
-     * Initialize the class and set its properties.
-     *
-     * @since    1.0.0
-     */
-    public function __construct() {
+	/**
+	 * Initialize the class and set its properties.
+	 *
+	 * @since    1.0.0
+	 */
+	public function __construct() {
 
-        // Main plugin instance
-        $instance     = \NMReadabilityAnalyser\plugin_instance();
-        $hooker       = $instance->get_hooker();
-        $this->assets = $instance->get_assets();
+		// Main plugin instance
+		$instance     = \NMReadabilityAnalyser\plugin_instance();
+		$hooker       = $instance->get_hooker();
+		$this->assets = $instance->get_assets();
 
-        $hooker->add_action( 'wp_enqueue_scripts', $this, 'enqueue_styles' );
-        $hooker->add_action( 'wp_enqueue_scripts', $this, 'enqueue_scripts' );
-    }
-
-
-    /**
-     * Register the stylesheets for the public-facing side of the site.
-     *
-     * NOTE: Remember to enqueue your styles only on pages where needed
-     *
-     * @since    1.0.0
-     */
-    public function enqueue_styles() {
-        wp_enqueue_style(
-            $this->get_plugin_id('/css'),
-            $this->assets->get('common.css'),
-            array(),
-            $this->get_plugin_version(),
-            'all'
-        );
-    }
+		$hooker->add_action( 'wp_enqueue_scripts', $this, 'enqueue_styles' );
+		$hooker->add_action( 'wp_enqueue_scripts', $this, 'enqueue_scripts' );
+	}
 
 
-    /**
-     * Register the JavaScript for the public-facing side of the site.
-     *
-     * NOTE: Remember to enqueue your scripts only on templates where needed
-     *
-     * @since    1.0.0
-     */
-    public function enqueue_scripts() {
+	/**
+	 * Register the stylesheets for the public-facing side of the site.
+	 *
+	 * NOTE: Remember to enqueue your styles only on pages where needed
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_styles() {
+		wp_enqueue_style(
+			$this->get_plugin_id( '/css' ),
+			$this->assets->get( 'common.css' ),
+			array(),
+			$this->get_plugin_version(),
+			'all'
+		);
+	}
 
-        $script_id = $this->get_plugin_id('/js');
 
-        wp_enqueue_script(
-            $script_id,
-            $this->assets->get('common.js'),
-            array(),
-            $this->get_plugin_version(),
-            false
-        );
+	/**
+	 * Register the JavaScript for the public-facing side of the site.
+	 *
+	 * NOTE: Remember to enqueue your scripts only on templates where needed
+	 *
+	 * @since    1.0.0
+	 */
+	public function enqueue_scripts() {
 
-        wp_localize_script(
-            $script_id,
-            'NMReadabilityAnalyser',
-            array(
-                'nonce'    => wp_create_nonce( 'NMReadabilityAnalyser_xhr_nonce' ),
-                'ajax_url' => admin_url( 'admin-ajax.php' ),
-                'post_id'  => get_the_ID(),
-            )
-        );
-    }
+		$script_id = $this->get_plugin_id( '/js' );
+
+		wp_enqueue_script(
+			$script_id,
+			$this->assets->get( 'common.js' ),
+			array(),
+			$this->get_plugin_version(),
+			false
+		);
+
+		wp_localize_script(
+			$script_id,
+			'NMReadabilityAnalyser',
+			array(
+				'nonce'    => wp_create_nonce( 'NMReadabilityAnalyser_xhr_nonce' ),
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'post_id'  => get_the_ID(),
+			)
+		);
+	}
 }

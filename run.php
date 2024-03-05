@@ -3,10 +3,10 @@
 namespace NMReadabilityAnalyser;
 
 // If this file is called directly, abort.
-defined('WPINC') || die;
+defined( 'WPINC' ) || die;
 
 // Autoload all classes via composer.
-require "vendor/autoload.php";
+require 'vendor/autoload.php';
 
 /**
  * Make main plugin class available via global function call.
@@ -15,7 +15,7 @@ require "vendor/autoload.php";
  */
 function plugin_instance() {
 
-    return \NMReadabilityAnalyser\Init::get_instance();
+	return \NMReadabilityAnalyser\Init::get_instance();
 }
 
 // Init plugin and make instance globally available

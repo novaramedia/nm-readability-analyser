@@ -1,6 +1,6 @@
 <?php
 
-defined('WPINC') || die;
+defined( 'WPINC' ) || die;
 
 /**
  * Plugin Name: NM Readability Analyser
@@ -14,16 +14,22 @@ defined('WPINC') || die;
  * Text Domain: _nm_
  */
 
-register_activation_hook( __FILE__, function() {
+register_activation_hook(
+	__FILE__,
+	function () {
 
-    // On activate do this
-    \NMReadabilityAnalyser\Activator::activate();
-});
+		// On activate do this
+		\NMReadabilityAnalyser\Activator::activate();
+	}
+);
 
-register_deactivation_hook( __FILE__, function () {
+register_deactivation_hook(
+	__FILE__,
+	function () {
 
-    // On deactivate do that
-    \NMReadabilityAnalyser\Deactivator::deactivate();
-});
+		// On deactivate do that
+		\NMReadabilityAnalyser\Deactivator::deactivate();
+	}
+);
 
-include "run.php";
+require 'run.php';

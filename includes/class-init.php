@@ -78,37 +78,35 @@ final class Init {
 	 * @static
 	 * @return Main instance.
 	 */
-	public static function get_instance()
-    {
-        if (null === self::$instance) {
-            self::$instance = new self();
-        }
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
 
-        return self::$instance;
-    }
+		return self::$instance;
+	}
 
-	
+
 	/**
-     * Singletons should not be cloneable.
-     */
-    private function __clone()
-    {
-    	throw new \Exception('Cannot clone ' . __CLASS__);
-    }
+	 * Singletons should not be cloneable.
+	 */
+	private function __clone() {
+		throw new \Exception( 'Cannot clone ' . __CLASS__ );
+	}
 
-    
-    /**
-     * Singletons should not be restorable from strings.
-     */
-    public function __wakeup()
-    {
-        throw new \Exception('Cannot unserialize ' . __CLASS__);
-    }
+
+	/**
+	 * Singletons should not be restorable from strings.
+	 */
+	public function __wakeup() {
+		throw new \Exception( 'Cannot unserialize ' . __CLASS__ );
+	}
 
 
 
 	/**
 	 * Run everything on init
+	 *
 	 * @return void
 	 */
 	public function init() {
@@ -143,10 +141,8 @@ final class Init {
 
 		$constants = $this->get_constants();
 
-		foreach ( $constants as $define => $value )
-		{
-			if ( ! defined($define) )
-			{
+		foreach ( $constants as $define => $value ) {
+			if ( ! defined( $define ) ) {
 				define( $define, $value );
 			}
 		}

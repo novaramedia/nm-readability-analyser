@@ -18,7 +18,7 @@ class I18n {
 	protected static $instance = null;
 
 	public function __construct() {
-		
+
 		// Main plugin instance
 		// $instance = NMReadabilityAnalyser();
 		// $hooker   = $instance->get_hooker();
