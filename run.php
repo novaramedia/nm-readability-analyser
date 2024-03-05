@@ -6,7 +6,7 @@ namespace NMReadabilityAnalyser;
 defined( 'WPINC' ) || die;
 
 // Autoload all classes via composer.
-require 'vendor/autoload.php';
+// require 'vendor/autoload.php';
 
 /**
  * Make main plugin class available via global function call.
