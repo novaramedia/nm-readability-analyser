@@ -6,7 +6,7 @@ defined( 'WPINC' ) || die;
  * Plugin Name: NM Readability Analyser
  * Description: Analyses content of posts to give a readability score and displays this to editors
  * Version: 1.0.0
- * Requires at least: 6.0
+ * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Novara Media
  * Author URI: https://github.com/novaramedia/
