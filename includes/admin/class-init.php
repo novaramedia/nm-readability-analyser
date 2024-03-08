@@ -87,7 +87,6 @@ class Init {
 	}
 
 	public function register_metabox() {
-
 		add_meta_box( 'meta-box-id', 'Readability Analysis', array( $this, 'display_metabox' ), 'post', 'advanced', 'low' );
 	}
 
@@ -95,28 +94,68 @@ class Init {
 		?>
 <div class="nm_readability-plugin">
 	<div class="nm_readability-plugin__content">
-	<div class="nm_readability-plugin__content__text">
-		<p>
-		This is an analysis of the ease of reading on the entirity of the post content. This uses several formulas: <a href="https://en.wikipedia.org/wiki/Dale–Chall_readability_formula">Dale–Chall</a>, <a href="https://en.wikipedia.org/wiki/Automated_readability_index">Automated Readability</a>, <a href="https://en.wikipedia.org/wiki/Coleman–Liau_index">Coleman–Liau</a>, <a href="https://en.wikipedia.org/wiki/Flesch–Kincaid_readability_tests#Flesch_reading_ease">Flesch</a>, <a href="https://en.wikipedia.org/wiki/Gunning_fog_index">Gunning fog</a> and <a href="https://en.wikipedia.org/wiki/SMOG">SMOG</a>. The results are averaged to an estimated reading age.
-		</p>
-		<p>
-		<em>This score updates on post save or update, not live with the editor.</em>
-		</p>
-	</div>
-	<div class="nm_readability-plugin__content__body">
-		<p style="font-size: 1.5rem; line-height: 1">Estimated reading age: <span id="nm_readability-age"></span></p>
-		Dale-Chall Difficult Word Count: <span id="nm_readability-dale-chall-difficult-word-count"></span><br/>
-		Polysyllabic Word Count: <span id="nm_readability-polysyllabic-word-count"></span><br/>
-		Percentage of All Words Polysyllabic: <span id="nm_readability-polysyllabic-word-percentage"></span>%<br/>
-		Word Count: <span id="nm_readability-word-count"></span><br/>
-		Sentence Count: <span id="nm_readability-sentence-count"></span>
-		</p>
-	</div>
+		<div class="nm_readability-plugin__content__text">
+			<p>
+			This is an analysis of the ease of reading on the entirity of the post content. This uses several formulas: <a href="https://en.wikipedia.org/wiki/Dale–Chall_readability_formula">Dale–Chall</a>, <a href="https://en.wikipedia.org/wiki/Automated_readability_index">Automated Readability</a>, <a href="https://en.wikipedia.org/wiki/Coleman–Liau_index">Coleman–Liau</a>, <a href="https://en.wikipedia.org/wiki/Flesch–Kincaid_readability_tests#Flesch_reading_ease">Flesch</a>, <a href="https://en.wikipedia.org/wiki/Gunning_fog_index">Gunning fog</a> and <a href="https://en.wikipedia.org/wiki/SMOG">SMOG</a>. The results are averaged to an estimated reading age.
+			</p>
+			<p>
+			<em>This score updates on post save or update, not live with the editor.</em>
+			</p>
+		</div>
+		<div class="nm_readability-plugin__content__body">
+			<p style="font-size: 1.5rem; line-height: 1">Estimated reading age: <span id="nm_readability-age"></span></p>
+			Dale-Chall Difficult Word Count: <span id="nm_readability-dale-chall-difficult-word-count"></span><br/>
+			Polysyllabic Word Count: <span id="nm_readability-polysyllabic-word-count"></span><br/>
+			Percentage of All Words Polysyllabic: <span id="nm_readability-polysyllabic-word-percentage"></span>%<br/>
+			Word Count: <span id="nm_readability-word-count"></span><br/>
+			Sentence Count: <span id="nm_readability-sentence-count"></span>
+			</p>
+			<div id="nm_readability-plugin__form">
+				<input type="hidden" id="nm_readability-age-input" name="nm_readability-age-input" />
+				<input type="hidden" name="post_id" value="<?php echo $post->ID; ?>" />
+				<?php wp_nonce_field( 'nm_readability_analyser', 'nm_readability_analyser_nonce' ); ?>
+			</div>
+		</div>
 	</div>
 </div>
 		<?php
 	}
 
-	public function on_save( $post ) {
+	public function on_save( $post_id ) {
+		// Check if our nonce is set.
+    if (!isset($_POST['nm_readability_analyser_nonce'])) {
+      return $post_id;
+		}
+
+    $nonce = $_POST['nm_readability_analyser_nonce'];
+
+    // Verify that the nonce is valid.
+    if (!wp_verify_nonce($nonce, 'nm_readability_analyser')) {
+      return $post_id;
+		}
+
+    // If this is an autosave, our form has not been submitted, so we don't want to do anything.
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+      return $post_id;
+		}
+
+    // Check the user's permissions.
+    if ('page' == $_POST['post_type']) {
+      if (!current_user_can('edit_page', $post_id)) {
+        return $post_id;
+			}
+    } else {
+      if (!current_user_can('edit_post', $post_id)) {
+        return $post_id;
+			}
+    }
+
+    /* OK, it's safe for us to save the data now. */
+
+    // Sanitize user input.
+    $age = sanitize_text_field($_POST['nm_readability-age-input']);
+
+    // Update the meta field in the database.
+    update_post_meta($post_id, 'nm_readability_age', $age);
 	}
 }

@@ -44,13 +44,13 @@ const runAnalysis = (rawContent) => {
     gradeToAge(bigAnalysis.gunningFog),
   ]);
 
+	let readabilityAgeInput = document.querySelector("#nm_readability-age-input");
+
+	readabilityAgeInput.value = average;
+
   let readabilityAgeSpan = document.querySelector("#nm_readability-age");
 
   readabilityAgeSpan.textContent = Math.round(average);
-
-  // let readabilityGradeSpan = document.querySelector("#readability-grade");
-
-  // readabilityGradeSpan.textContent = labelScore(analysis.score);
 
   let daleChallDifficultWordCountSpan = document.querySelector(
     "#nm_readability-dale-chall-difficult-word-count"
