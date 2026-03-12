@@ -59,14 +59,25 @@ add_action('admin_enqueue_scripts', function ($hook) {
     wp_enqueue_script(
         'nm-readability-analyser',
         plugin_dir_url(__FILE__) . 'dist/admin.js',
-        [],
+        ['wp-dom-ready', 'wp-data'],
         $version,
         true
     );
 
+    global $post;
+    $post_id = 0;
+
+    if ($post && isset($post->ID)) {
+        $post_id = (int) $post->ID;
+    }
+
+    if (!$post_id && 'post.php' === $hook && isset($_GET['post'])) {
+        $post_id = absint($_GET['post']);
+    }
+
     wp_localize_script('nm-readability-analyser', 'NMReadabilityAnalyser', [
         'nonce'   => wp_create_nonce('nm_readability_save'),
-        'post_id' => get_the_ID(),
+        'post_id' => $post_id,
     ]);
 });
 
@@ -172,20 +183,50 @@ add_action('save_post_post', function ($post_id) {
  */
 if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('nm-readability backfill', function () {
-        $posts = get_posts([
-            'numberposts' => -1,
-            'post_type'   => 'post',
-            'post_status' => 'publish',
+        $count_query = new \WP_Query([
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'fields'         => 'ids',
         ]);
 
-        $count = 0;
-        foreach ($posts as $post) {
-            $words = str_word_count(strip_tags($post->post_content));
-            $time = max(1, (int) ceil($words / 238));
-            update_post_meta($post->ID, 'nm_read_time', $time);
-            $count++;
+        $total = (int) $count_query->found_posts;
+
+        if ($total === 0) {
+            WP_CLI::success('No published posts found.');
+            return;
         }
 
+        $progress   = \WP_CLI\Utils\make_progress_bar('Backfilling read time', $total);
+        $count      = 0;
+        $paged      = 1;
+        $batch_size = 100;
+
+        do {
+            $query = new \WP_Query([
+                'post_type'      => 'post',
+                'post_status'    => 'publish',
+                'posts_per_page' => $batch_size,
+                'paged'          => $paged,
+            ]);
+
+            if (!$query->have_posts()) {
+                break;
+            }
+
+            foreach ($query->posts as $post) {
+                $words = str_word_count(strip_tags($post->post_content));
+                $time  = max(1, (int) ceil($words / 238));
+                update_post_meta($post->ID, 'nm_read_time', $time);
+                $count++;
+                $progress->tick();
+            }
+
+            wp_reset_postdata();
+            $paged++;
+        } while ($paged <= $query->max_num_pages);
+
+        $progress->finish();
         WP_CLI::success("Backfilled read time for {$count} posts.");
     });
 }

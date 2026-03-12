@@ -17,7 +17,7 @@ function stripHTML(html) {
 }
 
 function stripShortcodes(text) {
-  return text.replace(/\[(\w+)([^[\]]*?)\](.*?)\[\/\1\]/g, (_, _tag, _attrs, content) => content);
+  return text.replace(/\[([A-Za-z0-9_-]+)([^[\]]*?)\](.*?)\[\/\1\]/g, (_, _tag, _attrs, content) => content);
 }
 
 function gradeToAge(grade) {
@@ -90,9 +90,14 @@ document.addEventListener("DOMContentLoaded", () => {
     wp.domReady(() => {
       if (!document.querySelector(".nm-readability")) return;
 
-      if (wp.data) {
+      const editorStore = wp.data && typeof wp.data.select === "function"
+        ? wp.data.select("core/editor")
+        : null;
+      const hasBlockEditor = editorStore && typeof editorStore.getCurrentPost === "function";
+
+      if (hasBlockEditor) {
         // Block editor
-        const getContent = () => wp.data.select("core/editor").getCurrentPost().content;
+        const getContent = () => editorStore.getCurrentPost().content;
         run(getContent());
         wp.data.subscribe(() => debouncedRun(getContent()));
       } else if (typeof tinymce !== "undefined") {
