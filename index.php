@@ -227,16 +227,14 @@ if (defined('WP_CLI') && WP_CLI) {
         }
 
         do {
-            $batch_args['post__in'] = [];
-            $batch_args['where']    = '';
-
             // Cursor-based pagination: only fetch posts with ID > last processed
             global $wpdb;
             add_filter('posts_where', $cursor_filter = function ($where) use ($wpdb, $last_id) {
                 return $where . $wpdb->prepare(" AND {$wpdb->posts}.ID > %d", $last_id);
             });
 
-            $ids = get_posts($batch_args);
+            $query = new \WP_Query($batch_args);
+            $ids   = $query->posts;
 
             remove_filter('posts_where', $cursor_filter);
 

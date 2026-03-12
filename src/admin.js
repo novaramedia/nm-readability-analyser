@@ -41,7 +41,7 @@ function analyse(rawContent) {
     gradeToAge(scores.fleschKincaid),
     gradeToAge(scores.smog),
     gradeToAge(scores.gunningFog),
-  ]));
+  ]) * 100) / 100;
 
   const readTime = Math.max(1, Math.ceil(scores.wordCount / WORDS_PER_MINUTE));
 
@@ -63,7 +63,7 @@ function updateUI(result) {
     if (el) el.value = value;
   };
 
-  setText("nm-readability-age", readingAge);
+  setText("nm-readability-age", Math.round(readingAge));
   setText("nm-read-time", readTime + " min");
   setText("nm-readability-words", scores.wordCount);
   setText("nm-readability-sentences", scores.sentenceCount);
