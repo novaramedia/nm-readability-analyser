@@ -163,3 +163,29 @@ add_action('save_post_post', function ($post_id) {
         update_post_meta($post_id, 'nm_read_time', $time);
     }
 });
+
+/**
+ * WP-CLI: Backfill read time for all posts.
+ *
+ * Usage: wp nm-readability backfill
+ * Calculates read time (238 wpm) for all published posts and saves as nm_read_time meta.
+ */
+if (defined('WP_CLI') && WP_CLI) {
+    WP_CLI::add_command('nm-readability backfill', function () {
+        $posts = get_posts([
+            'numberposts' => -1,
+            'post_type'   => 'post',
+            'post_status' => 'publish',
+        ]);
+
+        $count = 0;
+        foreach ($posts as $post) {
+            $words = str_word_count(strip_tags($post->post_content));
+            $time = max(1, (int) ceil($words / 238));
+            update_post_meta($post->ID, 'nm_read_time', $time);
+            $count++;
+        }
+
+        WP_CLI::success("Backfilled read time for {$count} posts.");
+    });
+}
