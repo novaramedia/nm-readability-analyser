@@ -16,28 +16,34 @@ defined('WPINC') || die;
  * Register post meta fields with REST API exposure.
  */
 add_action('init', function () {
-    $meta_fields = [
-        'nm_readability_age' => [
-            'type'        => 'number',
-            'description' => 'Estimated reading age (average of multiple readability formulas)',
-        ],
-        'nm_read_time' => [
-            'type'        => 'integer',
-            'description' => 'Estimated read time in minutes',
-        ],
-    ];
+    register_post_meta('post', 'nm_readability_age', [
+        'show_in_rest'      => true,
+        'single'            => true,
+        'type'              => 'number',
+        'description'       => 'Estimated reading age (average of multiple readability formulas)',
+        'default'           => 0,
+        'sanitize_callback' => function ($value) {
+            $value = floatval($value);
+            return max(0, min(22, $value));
+        },
+        'auth_callback'     => function ($allowed, $meta_key, $post_id) {
+            return current_user_can('edit_post', $post_id);
+        },
+    ]);
 
-    foreach ($meta_fields as $key => $args) {
-        register_post_meta('post', $key, [
-            'show_in_rest'  => true,
-            'single'        => true,
-            'type'          => $args['type'],
-            'description'   => $args['description'],
-            'auth_callback' => function () {
-                return current_user_can('edit_posts');
-            },
-        ]);
-    }
+    register_post_meta('post', 'nm_read_time', [
+        'show_in_rest'      => true,
+        'single'            => true,
+        'type'              => 'integer',
+        'description'       => 'Estimated read time in minutes',
+        'default'           => 0,
+        'sanitize_callback' => function ($value) {
+            return max(0, absint($value));
+        },
+        'auth_callback'     => function ($allowed, $meta_key, $post_id) {
+            return current_user_can('edit_post', $post_id);
+        },
+    ]);
 });
 
 /**
@@ -164,14 +170,18 @@ add_action('save_post_post', function ($post_id) {
         return;
     }
 
-    if (isset($_POST['nm_readability_age'])) {
+    if (isset($_POST['nm_readability_age']) && $_POST['nm_readability_age'] !== '') {
         $age = floatval($_POST['nm_readability_age']);
-        update_post_meta($post_id, 'nm_readability_age', $age);
+        if ($age > 0) {
+            update_post_meta($post_id, 'nm_readability_age', $age);
+        }
     }
 
-    if (isset($_POST['nm_read_time'])) {
+    if (isset($_POST['nm_read_time']) && $_POST['nm_read_time'] !== '') {
         $time = absint($_POST['nm_read_time']);
-        update_post_meta($post_id, 'nm_read_time', $time);
+        if ($time > 0) {
+            update_post_meta($post_id, 'nm_read_time', $time);
+        }
     }
 });
 
@@ -199,32 +209,34 @@ if (defined('WP_CLI') && WP_CLI) {
 
         $progress   = \WP_CLI\Utils\make_progress_bar('Backfilling read time', $total);
         $count      = 0;
-        $paged      = 1;
+        $offset     = 0;
         $batch_size = 100;
 
         do {
-            $query = new \WP_Query([
+            $ids = get_posts([
                 'post_type'      => 'post',
                 'post_status'    => 'publish',
                 'posts_per_page' => $batch_size,
-                'paged'          => $paged,
+                'offset'         => $offset,
+                'fields'         => 'ids',
+                'no_found_rows'  => true,
             ]);
 
-            if (!$query->have_posts()) {
+            if (empty($ids)) {
                 break;
             }
 
-            foreach ($query->posts as $post) {
-                $words = str_word_count(strip_tags($post->post_content));
-                $time  = max(1, (int) ceil($words / 238));
-                update_post_meta($post->ID, 'nm_read_time', $time);
+            foreach ($ids as $id) {
+                $content = get_post_field('post_content', $id);
+                $words   = str_word_count(strip_tags($content));
+                $time    = max(1, (int) ceil($words / 238));
+                update_post_meta($id, 'nm_read_time', $time);
                 $count++;
                 $progress->tick();
             }
 
-            wp_reset_postdata();
-            $paged++;
-        } while ($paged <= $query->max_num_pages);
+            $offset += $batch_size;
+        } while (count($ids) === $batch_size);
 
         $progress->finish();
         WP_CLI::success("Backfilled read time for {$count} posts.");
