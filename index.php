@@ -22,11 +22,11 @@ add_action('init', function () {
         'type'              => 'number',
         'description'       => 'Estimated reading age (average of multiple readability formulas)',
         'default'           => 0,
-        'sanitize_callback' => function ($value) {
+        'sanitize_callback' => function ($value, $meta_key, $object_type) {
             $value = floatval($value);
             return max(0, min(22, $value));
         },
-        'auth_callback'     => function ($allowed, $meta_key, $post_id) {
+        'auth_callback'     => function ($allowed, $meta_key, $post_id, $user_id, $cap, $caps) {
             return current_user_can('edit_post', $post_id);
         },
     ]);
@@ -37,10 +37,10 @@ add_action('init', function () {
         'type'              => 'integer',
         'description'       => 'Estimated read time in minutes',
         'default'           => 0,
-        'sanitize_callback' => function ($value) {
+        'sanitize_callback' => function ($value, $meta_key, $object_type) {
             return max(0, absint($value));
         },
-        'auth_callback'     => function ($allowed, $meta_key, $post_id) {
+        'auth_callback'     => function ($allowed, $meta_key, $post_id, $user_id, $cap, $caps) {
             return current_user_can('edit_post', $post_id);
         },
     ]);
@@ -70,21 +70,6 @@ add_action('admin_enqueue_scripts', function ($hook) {
         true
     );
 
-    global $post;
-    $post_id = 0;
-
-    if ($post && isset($post->ID)) {
-        $post_id = (int) $post->ID;
-    }
-
-    if (!$post_id && 'post.php' === $hook && isset($_GET['post'])) {
-        $post_id = absint($_GET['post']);
-    }
-
-    wp_localize_script('nm-readability-analyser', 'NMReadabilityAnalyser', [
-        'nonce'   => wp_create_nonce('nm_readability_save'),
-        'post_id' => $post_id,
-    ]);
 });
 
 /**
@@ -170,16 +155,20 @@ add_action('save_post_post', function ($post_id) {
         return;
     }
 
-    if (isset($_POST['nm_readability_age']) && $_POST['nm_readability_age'] !== '') {
-        $age = floatval($_POST['nm_readability_age']);
-        if ($age > 0) {
+    if (isset($_POST['nm_readability_age'])) {
+        if ($_POST['nm_readability_age'] === '') {
+            delete_post_meta($post_id, 'nm_readability_age');
+        } else {
+            $age = max(0, min(22, floatval($_POST['nm_readability_age'])));
             update_post_meta($post_id, 'nm_readability_age', $age);
         }
     }
 
-    if (isset($_POST['nm_read_time']) && $_POST['nm_read_time'] !== '') {
-        $time = absint($_POST['nm_read_time']);
-        if ($time > 0) {
+    if (isset($_POST['nm_read_time'])) {
+        if ($_POST['nm_read_time'] === '') {
+            delete_post_meta($post_id, 'nm_read_time');
+        } else {
+            $time = max(0, absint($_POST['nm_read_time']));
             update_post_meta($post_id, 'nm_read_time', $time);
         }
     }
@@ -220,7 +209,7 @@ if (defined('WP_CLI') && WP_CLI) {
 
         $progress   = \WP_CLI\Utils\make_progress_bar('Backfilling read time', $total);
         $count      = 0;
-        $offset     = 0;
+        $last_id    = 0;
         $batch_size = 100;
 
         $batch_args = [
@@ -229,6 +218,8 @@ if (defined('WP_CLI') && WP_CLI) {
             'posts_per_page' => $batch_size,
             'fields'         => 'ids',
             'no_found_rows'  => true,
+            'orderby'        => 'ID',
+            'order'          => 'ASC',
         ];
 
         if (!$all) {
@@ -236,8 +227,18 @@ if (defined('WP_CLI') && WP_CLI) {
         }
 
         do {
-            $batch_args['offset'] = $offset;
+            $batch_args['post__in'] = [];
+            $batch_args['where']    = '';
+
+            // Cursor-based pagination: only fetch posts with ID > last processed
+            global $wpdb;
+            add_filter('posts_where', $cursor_filter = function ($where) use ($wpdb, $last_id) {
+                return $where . $wpdb->prepare(" AND {$wpdb->posts}.ID > %d", $last_id);
+            });
+
             $ids = get_posts($batch_args);
+
+            remove_filter('posts_where', $cursor_filter);
 
             if (empty($ids)) {
                 break;
@@ -252,7 +253,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 $progress->tick();
             }
 
-            $offset += $batch_size;
+            $last_id = end($ids);
         } while (count($ids) === $batch_size);
 
         $progress->finish();
