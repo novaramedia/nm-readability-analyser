@@ -192,14 +192,22 @@ add_action('save_post_post', function ($post_id) {
  * Calculates read time (238 wpm) for all published posts and saves as nm_read_time meta.
  */
 if (defined('WP_CLI') && WP_CLI) {
-    WP_CLI::add_command('nm-readability backfill', function () {
-        $count_query = new \WP_Query([
+    WP_CLI::add_command('nm-readability backfill', function ($args, $assoc_args) {
+        $category = $assoc_args['category'] ?? 'articles';
+        $all      = isset($assoc_args['all']);
+
+        $query_args = [
             'post_type'      => 'post',
             'post_status'    => 'publish',
             'posts_per_page' => 1,
             'fields'         => 'ids',
-        ]);
+        ];
 
+        if (!$all) {
+            $query_args['category_name'] = $category;
+        }
+
+        $count_query = new \WP_Query($query_args);
         $total = (int) $count_query->found_posts;
 
         if ($total === 0) {
@@ -207,20 +215,29 @@ if (defined('WP_CLI') && WP_CLI) {
             return;
         }
 
+        $scope = $all ? 'all posts' : "'{$category}' category";
+        WP_CLI::log("Backfilling read time for {$total} posts in {$scope}...");
+
         $progress   = \WP_CLI\Utils\make_progress_bar('Backfilling read time', $total);
         $count      = 0;
         $offset     = 0;
         $batch_size = 100;
 
+        $batch_args = [
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'posts_per_page' => $batch_size,
+            'fields'         => 'ids',
+            'no_found_rows'  => true,
+        ];
+
+        if (!$all) {
+            $batch_args['category_name'] = $category;
+        }
+
         do {
-            $ids = get_posts([
-                'post_type'      => 'post',
-                'post_status'    => 'publish',
-                'posts_per_page' => $batch_size,
-                'offset'         => $offset,
-                'fields'         => 'ids',
-                'no_found_rows'  => true,
-            ]);
+            $batch_args['offset'] = $offset;
+            $ids = get_posts($batch_args);
 
             if (empty($ids)) {
                 break;
